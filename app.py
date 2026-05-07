@@ -27,10 +27,10 @@ st.title("🇪🇹 Equb App Systems")
 st.markdown("""
 ## 👋 Welcome to Equb App Systems
 
-Welcome to the **Equb App Systems**, a modern digital platform designed to support 
+Welcome to the **Equb App Systems**, a modern digital platform designed to support
 traditional Ethiopian rotating savings and credit associations (**Equb**).
 
-This system transforms traditional community-based financial practices into a 
+This system transforms traditional community-based financial practices into a
 secure and intelligent digital ecosystem using:
 
 - Mathematical and statistical modeling
@@ -39,13 +39,13 @@ secure and intelligent digital ecosystem using:
 - Loan and savings analytics
 - Smart financial tracking and reporting
 
-The platform is designed as a **Technology Transfer Project** with future scalability 
+The platform is designed as a **Technology Transfer Project** with future scalability
 towards:
 
-✅ Web-based systems  
-✅ Mobile applications  
-✅ Desktop enterprise systems  
-✅ Cloud-based financial platforms  
+✅ Web-based systems
+✅ Mobile applications
+✅ Desktop enterprise systems
+✅ Cloud-based financial platforms
 
 ---
 
@@ -79,10 +79,8 @@ This system incorporates common Ethiopian Equb practices such as:
 
 This project is developed under a **Technology Transfer Initiative**.
 
-Special thanks to the **Technology Transfer Office, Aksum University**  
+Special thanks to the **Technology Transfer Office, Aksum University**
 for supporting and funding this innovative digital community finance project.
-
----
 """)
 
 # =========================================================
@@ -255,6 +253,12 @@ class EqubService:
 
         db_set("equb_fund", fund - amount)
 
+        db_append("transactions", {
+            "time": datetime.now(),
+            "type": "Loan",
+            "amount": amount
+        })
+
         return True
 
 # =========================================================
@@ -318,10 +322,12 @@ if menu == "Dashboard":
     st.subheader("📈 Fund History")
 
     if db_get("history"):
+
         df_hist = pd.DataFrame(
             db_get("history"),
             columns=["Fund"]
         )
+
         st.line_chart(df_hist)
 
 # =========================================================
@@ -353,7 +359,9 @@ elif menu == "Members":
 
     if db_get("members"):
 
-        df = pd.DataFrame(db_get("members")).T
+        df = pd.DataFrame(
+            db_get("members")
+        ).T
 
         st.dataframe(df)
 
@@ -405,6 +413,7 @@ elif menu == "Equb Winners":
             )
 
         else:
+
             st.warning(
                 "All members already received payout"
             )
@@ -416,7 +425,9 @@ elif menu == "Equb Winners":
     if db_get("winners"):
 
         st.dataframe(
-            pd.DataFrame(db_get("winners"))
+            pd.DataFrame(
+                db_get("winners")
+            )
         )
 
 # =========================================================
@@ -426,7 +437,9 @@ elif menu == "Loan System":
 
     st.subheader("💳 Member Loan System")
 
-    members = list(db_get("members").keys())
+    members = list(
+        db_get("members").keys()
+    )
 
     if len(members) == 0:
 
@@ -471,7 +484,9 @@ elif menu == "Loan System":
     if db_get("loans"):
 
         st.dataframe(
-            pd.DataFrame(db_get("loans"))
+            pd.DataFrame(
+                db_get("loans")
+            )
         )
 
 # =========================================================
@@ -490,6 +505,16 @@ elif menu == "Analytics":
         for m in members
     ]) if members else 0
 
+    total_loans = sum([
+        loan["amount"]
+        for loan in db_get("loans")
+    ]) if db_get("loans") else 0
+
+    st.metric(
+        "Total Members",
+        total_members
+    )
+
     st.metric(
         "Total Contributions",
         f"{total_paid:.2f} ETB"
@@ -500,6 +525,11 @@ elif menu == "Analytics":
         f"{db_get('equb_fund'):.2f} ETB"
     )
 
+    st.metric(
+        "Total Loans",
+        f"{total_loans:.2f} ETB"
+    )
+
     st.markdown("---")
 
     st.subheader("📋 Transactions")
@@ -507,7 +537,9 @@ elif menu == "Analytics":
     if db_get("transactions"):
 
         st.dataframe(
-            pd.DataFrame(db_get("transactions"))
+            pd.DataFrame(
+                db_get("transactions")
+            )
         )
 
 # =========================================================
@@ -517,51 +549,55 @@ elif menu == "Mathematical Model":
 
     st.subheader("📘 Mathematical & Statistical Model")
 
-    st.markdown(r"""
+    st.markdown("""
 ### Core Equb Financial Model
-
-The Equb contribution system is modeled as:
-
 """)
 
     :contentReference[oaicite:0]{index=0}
 
-    st.markdown(r"""
+    st.markdown("""
 Where:
 
 - \(F_t\): Current Equb fund
 - \(C_t\): Member contributions
-- \(I_t\): Investment or service income
+- \(I_t\): Investment income
 - \(P_t\): Winner payout
 - \(L_t\): Loans issued
 - \(R_t\): Loan repayments
 
 ---
 
-### Winner Selection Model
-
-Traditional Ethiopian Equb systems commonly use:
-
-- Rotational selection
-- Random lottery
-- Priority-based social agreement
-
-The random winner process is modeled using:
-
+### Winner Selection Probability
 """)
 
     :contentReference[oaicite:1]{index=1}
 
-    st.markdown(r"""
+    st.markdown("""
+Where:
+
+- \(P(W_i)\): Probability member \(i\) wins
+- \(N\): Number of eligible members
+
 ---
 
 ### Loan Growth Model
-
-Loans with interest follow:
-
 """)
 
     :contentReference[oaicite:2]{index=2}
+
+    st.markdown("""
+Where:
+
+- \(A_t\): Total repayment
+- \(P\): Principal loan amount
+- \(r\): Interest rate
+
+---
+
+### Sustainability Condition
+""")
+
+    :contentReference[oaicite:3]{index=3}
 
     st.markdown("""
 These models support:
@@ -579,9 +615,9 @@ These models support:
 st.markdown("---")
 
 st.markdown("""
-### Equb App Systems
+### 🇪🇹 Equb App Systems
 
-Technology Transfer Project  
+Technology Transfer Project
 Department of Statistics, Aksum University
 
 Developed for Ethiopian Community Finance Digital Transformation
