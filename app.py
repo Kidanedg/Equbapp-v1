@@ -16,7 +16,7 @@ import uuid
 # =========================================================
 st.set_page_config(
     page_title="Equb App Systems",
-    page_icon="🇪🇹",
+    page_icon="Equb",
     layout="wide",
     initial_sidebar_state="expanded"
 )
