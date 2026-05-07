@@ -1,7 +1,8 @@
 ############################################################
-# EQUB APP SYSTEMS (TECHNOLOGY TRANSFER READY)
-# Ethiopian Equb Digital Finance Platform
-# Web → Mobile → Desktop Architecture
+# EQUB APP SYSTEMS (ENTERPRISE TECHNOLOGY TRANSFER VERSION)
+# Ethiopian Digital Rotating Savings & Credit Platform
+# Author: Aksum University Technology Transfer Initiative
+# Version: 2.0 Enterprise Demonstration
 ############################################################
 
 import streamlit as st
@@ -9,137 +10,161 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 import random
+import uuid
 
 # =========================================================
-# PAGE CONFIG
+# PAGE CONFIGURATION
 # =========================================================
 st.set_page_config(
     page_title="Equb App Systems",
+    page_icon="🇪🇹",
     layout="wide",
-    page_icon="🇪🇹"
+    initial_sidebar_state="expanded"
 )
 
 # =========================================================
-# WELCOME SECTION
+# CUSTOM STYLING
+# =========================================================
+st.markdown("""
+<style>
+
+.main {
+    background-color: #f8f9fa;
+}
+
+h1, h2, h3 {
+    color: #0B3D91;
+}
+
+.stMetric {
+    background-color: white;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e6e6e6;
+}
+
+div.stButton > button {
+    width: 100%;
+    border-radius: 8px;
+    height: 3em;
+    background-color: #0B3D91;
+    color: white;
+    font-weight: bold;
+}
+
+.sidebar .sidebar-content {
+    background-color: #f0f2f6;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# APPLICATION HEADER
 # =========================================================
 st.title("🇪🇹 Equb App Systems")
+st.markdown("""
+### Ethiopian Community Finance Digital Transformation Platform
+""")
 
 st.markdown("""
-## 👋 Welcome to Equb App Systems
+The **Equb App Systems** platform modernizes traditional Ethiopian
+rotating savings and credit associations through advanced digital technologies,
+financial analytics, and intelligent management systems.
 
-Welcome to the **Equb App Systems**, a modern digital platform designed to support
-traditional Ethiopian rotating savings and credit associations (**Equb**).
-
-This system transforms traditional community-based financial practices into a
-secure and intelligent digital ecosystem using:
-
-- Mathematical and statistical modeling
-- Financial simulation systems
-- Digital contribution management
-- Loan and savings analytics
-- Smart financial tracking and reporting
-
-The platform is designed as a **Technology Transfer Project** with future scalability
-towards:
-
-✅ Web-based systems
-✅ Mobile applications
-✅ Desktop enterprise systems
-✅ Cloud-based financial platforms
-
----
-
-## 🎯 Main Objectives
-
-- Digitize traditional Equb operations
-- Improve financial transparency
-- Automate contribution management
-- Support equitable payout mechanisms
-- Enhance sustainability using analytics
-- Build scalable Ethiopian fintech solutions
-
----
-
-## 🇪🇹 Ethiopian Equb Practices Included
-
-This system incorporates common Ethiopian Equb practices such as:
-
-- Monthly member contributions
-- Rotational payout systems
-- Lottery/winner-based payout mechanisms
-- Community trust structures
-- Emergency support systems
-- Social savings culture
-- Loan services for members
-- Penalty handling for late payments
-
----
-
-## 🙏 Acknowledgment
-
-This project is developed under a **Technology Transfer Initiative**.
-
-Special thanks to the **Technology Transfer Office, Aksum University**
-for supporting and funding this innovative digital community finance project.
+This project is developed as a **Technology Transfer Initiative**
+to support scalable Ethiopian fintech innovation.
 """)
 
 # =========================================================
 # DATABASE INITIALIZATION
 # =========================================================
-def init_db():
+def initialize_database():
 
-    if "db" not in st.session_state:
+    if "equb_db" not in st.session_state:
 
-        st.session_state.db = {
+        st.session_state.equb_db = {
 
-            "equb_fund": 50000.0,
+            "system_info": {
+                "organization": "Aksum University",
+                "project": "Equb App Systems",
+                "version": "2.0 Enterprise",
+                "created": datetime.now()
+            },
+
+            "financials": {
+                "equb_fund": 100000.0,
+                "monthly_contribution": 1000.0,
+                "interest_income": 0.0
+            },
 
             "members": {},
 
             "transactions": [],
 
-            "history": [],
-
             "winners": [],
 
             "loans": [],
 
-            "monthly_contribution": 1000.0,
+            "fund_history": [],
+
+            "analytics": {
+                "total_contributions": 0,
+                "total_payouts": 0,
+                "total_loans": 0
+            },
 
             "equb_round": 1
         }
 
-def db_get(key):
-    return st.session_state.db[key]
-
-def db_set(key, value):
-    st.session_state.db[key] = value
-
-def db_append(key, value):
-    st.session_state.db[key].append(value)
-
-init_db()
+initialize_database()
 
 # =========================================================
-# MATHEMATICAL MODEL
+# DATABASE HELPERS
 # =========================================================
-class EqubModel:
+def db():
+    return st.session_state.equb_db
+
+# =========================================================
+# MATHEMATICAL MODELING LAYER
+# =========================================================
+class EqubMathematics:
 
     @staticmethod
-    def total_contribution(contributions):
-        return sum(contributions.values())
+    def total_contributions(member_data):
+
+        total = 0
+
+        for member in member_data.values():
+            total += member["total_paid"]
+
+        return total
 
     @staticmethod
-    def payout_amount(total_fund):
-        return total_fund
+    def sustainability_ratio(fund, liabilities):
+
+        if liabilities == 0:
+            return 1.0
+
+        return fund / liabilities
 
     @staticmethod
-    def random_winner(member_list):
-        return random.choice(member_list)
+    def payout_probability(n):
+
+        if n <= 0:
+            return 0
+
+        return 1 / n
 
     @staticmethod
-    def loan_interest(amount, rate):
-        return amount * (1 + rate)
+    def compound_loan(principal, rate):
+
+        return principal * (1 + rate)
+
+    @staticmethod
+    def expected_monthly_fund(members, contribution):
+
+        return members * contribution
 
 # =========================================================
 # BUSINESS SERVICE LAYER
@@ -147,410 +172,543 @@ class EqubModel:
 class EqubService:
 
     @staticmethod
-    def add_member(name, phone, city):
+    def add_member(full_name, phone, city):
 
-        members = db_get("members")
+        member_id = str(uuid.uuid4())[:8]
 
-        members[name] = {
+        db()["members"][member_id] = {
+
+            "member_id": member_id,
+            "full_name": full_name,
             "phone": phone,
             "city": city,
-            "joined": datetime.now(),
-            "total_paid": 0,
-            "received": False
+            "join_date": datetime.now(),
+            "total_paid": 0.0,
+            "received_payout": False,
+            "status": "Active"
         }
 
-        db_set("members", members)
-
     @staticmethod
-    def collect_contributions():
+    def collect_monthly_contributions():
 
-        members = db_get("members")
-        contribution = db_get("monthly_contribution")
+        members = db()["members"]
 
-        total = 0
+        contribution = db()["financials"]["monthly_contribution"]
 
-        for m in members:
+        total_collection = 0
 
-            members[m]["total_paid"] += contribution
-            total += contribution
+        for member_id in members:
 
-        db_set("members", members)
+            members[member_id]["total_paid"] += contribution
 
-        fund = db_get("equb_fund")
-        fund += total
+            total_collection += contribution
 
-        db_set("equb_fund", fund)
+        db()["financials"]["equb_fund"] += total_collection
 
-        db_append("transactions", {
-            "time": datetime.now(),
+        db()["analytics"]["total_contributions"] += total_collection
+
+        db()["transactions"].append({
+
+            "date": datetime.now(),
             "type": "Contribution",
-            "amount": total
+            "amount": total_collection,
+            "description": "Monthly member contribution collection"
         })
 
-        return total
+        db()["fund_history"].append({
+
+            "date": datetime.now(),
+            "fund": db()["financials"]["equb_fund"]
+        })
+
+        return total_collection
 
     @staticmethod
     def select_winner():
 
-        members = db_get("members")
+        eligible_members = []
 
-        eligible = [
-            m for m in members
-            if not members[m]["received"]
-        ]
+        for member_id, member in db()["members"].items():
 
-        if len(eligible) == 0:
-            return None, 0
+            if not member["received_payout"]:
+                eligible_members.append(member_id)
 
-        winner = EqubModel.random_winner(eligible)
+        if len(eligible_members) == 0:
+            return None
 
-        payout = db_get("equb_fund")
+        winner_id = random.choice(eligible_members)
 
-        members[winner]["received"] = True
+        payout_amount = db()["financials"]["equb_fund"]
 
-        db_set("members", members)
+        db()["members"][winner_id]["received_payout"] = True
 
-        db_append("winners", {
-            "round": db_get("equb_round"),
-            "winner": winner,
-            "amount": payout,
-            "time": datetime.now()
-        })
+        db()["winners"].append({
 
-        db_append("transactions", {
-            "time": datetime.now(),
-            "type": "Payout",
-            "amount": payout
-        })
-
-        db_set("equb_fund", 0)
-
-        db_set(
-            "equb_round",
-            db_get("equb_round") + 1
-        )
-
-        return winner, payout
-
-    @staticmethod
-    def issue_loan(member, amount, rate):
-
-        fund = db_get("equb_fund")
-
-        if amount > fund:
-            return False
-
-        total_due = EqubModel.loan_interest(amount, rate)
-
-        db_append("loans", {
-            "member": member,
-            "amount": amount,
-            "interest_rate": rate,
-            "total_due": total_due,
-            "status": "Active",
+            "round": db()["equb_round"],
+            "winner": db()["members"][winner_id]["full_name"],
+            "amount": payout_amount,
             "date": datetime.now()
         })
 
-        db_set("equb_fund", fund - amount)
+        db()["transactions"].append({
 
-        db_append("transactions", {
-            "time": datetime.now(),
+            "date": datetime.now(),
+            "type": "Payout",
+            "amount": payout_amount,
+            "description": "Equb rotational payout"
+        })
+
+        db()["analytics"]["total_payouts"] += payout_amount
+
+        db()["financials"]["equb_fund"] = 0
+
+        db()["equb_round"] += 1
+
+        return winner_id, payout_amount
+
+    @staticmethod
+    def issue_loan(member_id, amount, rate):
+
+        available_fund = db()["financials"]["equb_fund"]
+
+        if amount > available_fund:
+
+            return False
+
+        total_due = EqubMathematics.compound_loan(
+            amount,
+            rate
+        )
+
+        db()["loans"].append({
+
+            "member": db()["members"][member_id]["full_name"],
+            "principal": amount,
+            "interest_rate": rate,
+            "total_due": total_due,
+            "issue_date": datetime.now(),
+            "status": "Active"
+        })
+
+        db()["financials"]["equb_fund"] -= amount
+
+        db()["analytics"]["total_loans"] += amount
+
+        db()["transactions"].append({
+
+            "date": datetime.now(),
             "type": "Loan",
-            "amount": amount
+            "amount": amount,
+            "description": "Member loan issued"
         })
 
         return True
 
 # =========================================================
-# SIDEBAR
+# SIDEBAR NAVIGATION
 # =========================================================
-st.sidebar.title("⚙️ Equb Navigation")
+st.sidebar.title("⚙️ Navigation")
 
 menu = st.sidebar.radio(
+
     "Select Module",
+
     [
         "Dashboard",
-        "Members",
-        "Contributions",
-        "Equb Winners",
-        "Loan System",
-        "Analytics",
-        "Mathematical Model"
+        "Member Management",
+        "Contribution System",
+        "Winner Selection",
+        "Loan Management",
+        "Financial Analytics",
+        "Mathematical Models",
+        "System Report"
     ]
 )
 
 st.sidebar.markdown("---")
 
+st.sidebar.subheader("⚙️ System Settings")
+
 monthly_contribution = st.sidebar.number_input(
-    "Monthly Contribution",
-    value=1000.0
+
+    "Monthly Contribution (ETB)",
+
+    value=float(db()["financials"]["monthly_contribution"]),
+
+    min_value=100.0
 )
 
-db_set("monthly_contribution", monthly_contribution)
+db()["financials"]["monthly_contribution"] = monthly_contribution
 
 # =========================================================
-# DASHBOARD
+# DASHBOARD MODULE
 # =========================================================
 if menu == "Dashboard":
 
-    st.subheader("📊 Equb Dashboard")
+    st.header("📊 Executive Dashboard")
 
     col1, col2, col3, col4 = st.columns(4)
 
     col1.metric(
         "Current Fund",
-        f"{db_get('equb_fund'):.2f} ETB"
+        f"{db()['financials']['equb_fund']:,.2f} ETB"
     )
 
     col2.metric(
-        "Members",
-        len(db_get("members"))
+        "Registered Members",
+        len(db()["members"])
     )
 
     col3.metric(
-        "Winners",
-        len(db_get("winners"))
+        "Completed Winners",
+        len(db()["winners"])
     )
 
     col4.metric(
-        "Loans",
-        len(db_get("loans"))
+        "Active Loans",
+        len(db()["loans"])
     )
 
     st.markdown("---")
 
-    st.subheader("📈 Fund History")
+    colA, colB = st.columns(2)
 
-    if db_get("history"):
+    with colA:
 
-        df_hist = pd.DataFrame(
-            db_get("history"),
-            columns=["Fund"]
-        )
+        st.subheader("📈 Fund Growth Trend")
 
-        st.line_chart(df_hist)
+        if len(db()["fund_history"]) > 0:
 
-# =========================================================
-# MEMBERS
-# =========================================================
-elif menu == "Members":
+            fund_df = pd.DataFrame(db()["fund_history"])
 
-    st.subheader("👥 Member Registration")
-
-    name = st.text_input("Full Name")
-    phone = st.text_input("Phone Number")
-    city = st.text_input("City")
-
-    if st.button("Add Member"):
-
-        if name:
-
-            EqubService.add_member(
-                name,
-                phone,
-                city
+            st.line_chart(
+                fund_df["fund"]
             )
 
-            st.success("Member registered successfully")
+        else:
+            st.info("No historical fund data available.")
+
+    with colB:
+
+        st.subheader("📋 Financial Overview")
+
+        overview = pd.DataFrame({
+
+            "Metric": [
+                "Total Contributions",
+                "Total Loans",
+                "Total Payouts"
+            ],
+
+            "Value": [
+
+                db()["analytics"]["total_contributions"],
+
+                db()["analytics"]["total_loans"],
+
+                db()["analytics"]["total_payouts"]
+            ]
+        })
+
+        st.dataframe(
+            overview,
+            use_container_width=True
+        )
+
+# =========================================================
+# MEMBER MANAGEMENT
+# =========================================================
+elif menu == "Member Management":
+
+    st.header("👥 Member Registration & Management")
+
+    with st.form("member_form"):
+
+        full_name = st.text_input("Full Name")
+
+        phone = st.text_input("Phone Number")
+
+        city = st.text_input("City")
+
+        submitted = st.form_submit_button("Register Member")
+
+        if submitted:
+
+            if full_name.strip() == "":
+
+                st.error("Full name is required.")
+
+            else:
+
+                EqubService.add_member(
+                    full_name,
+                    phone,
+                    city
+                )
+
+                st.success("Member registered successfully.")
 
     st.markdown("---")
 
     st.subheader("📋 Registered Members")
 
-    if db_get("members"):
+    if len(db()["members"]) > 0:
 
-        df = pd.DataFrame(
-            db_get("members")
+        members_df = pd.DataFrame(
+            db()["members"]
         ).T
 
-        st.dataframe(df)
+        st.dataframe(
+            members_df,
+            use_container_width=True
+        )
+
+    else:
+        st.info("No members registered.")
 
 # =========================================================
-# CONTRIBUTIONS
+# CONTRIBUTION SYSTEM
 # =========================================================
-elif menu == "Contributions":
+elif menu == "Contribution System":
 
-    st.subheader("💰 Monthly Contribution Collection")
+    st.header("💰 Monthly Contribution Collection")
 
     st.info(
         f"Current Monthly Contribution: "
-        f"{monthly_contribution:.2f} ETB"
+        f"{monthly_contribution:,.2f} ETB"
     )
 
-    if st.button("Collect Contributions"):
+    if st.button("Collect Monthly Contributions"):
 
-        total = EqubService.collect_contributions()
-
-        fund = db_get("equb_fund")
-
-        db_append("history", fund)
+        collected = EqubService.collect_monthly_contributions()
 
         st.success(
-            f"Total Collected: {total:.2f} ETB"
+            f"Successfully collected "
+            f"{collected:,.2f} ETB"
+        )
+
+    st.markdown("---")
+
+    st.subheader("📋 Contribution Transactions")
+
+    transaction_df = pd.DataFrame(
+        db()["transactions"]
+    )
+
+    if len(transaction_df) > 0:
+
+        st.dataframe(
+            transaction_df,
+            use_container_width=True
         )
 
 # =========================================================
-# WINNERS
+# WINNER SELECTION
 # =========================================================
-elif menu == "Equb Winners":
+elif menu == "Winner Selection":
 
-    st.subheader("🏆 Equb Winner Selection")
+    st.header("🏆 Equb Winner Selection")
 
-    st.write(
-        f"Current Round: "
-        f"{db_get('equb_round')}"
+    st.metric(
+        "Current Equb Round",
+        db()["equb_round"]
     )
 
     if st.button("Select Winner"):
 
-        winner, payout = EqubService.select_winner()
+        result = EqubService.select_winner()
 
-        if winner:
+        if result is not None:
+
+            winner_id, amount = result
+
+            winner_name = db()["members"][winner_id]["full_name"]
 
             st.success(
-                f"{winner} won "
-                f"{payout:.2f} ETB"
+                f"🎉 {winner_name} won "
+                f"{amount:,.2f} ETB"
             )
 
         else:
 
             st.warning(
-                "All members already received payout"
+                "All members already received payout."
             )
 
     st.markdown("---")
 
     st.subheader("📋 Winner History")
 
-    if db_get("winners"):
+    if len(db()["winners"]) > 0:
+
+        winners_df = pd.DataFrame(
+            db()["winners"]
+        )
 
         st.dataframe(
-            pd.DataFrame(
-                db_get("winners")
-            )
+            winners_df,
+            use_container_width=True
         )
 
 # =========================================================
-# LOAN SYSTEM
+# LOAN MANAGEMENT
 # =========================================================
-elif menu == "Loan System":
+elif menu == "Loan Management":
 
-    st.subheader("💳 Member Loan System")
+    st.header("💳 Loan Management System")
 
-    members = list(
-        db_get("members").keys()
-    )
+    member_names = {
 
-    if len(members) == 0:
+        member_id: data["full_name"]
 
-        st.warning("No members registered")
+        for member_id, data
+        in db()["members"].items()
+    }
+
+    if len(member_names) == 0:
+
+        st.warning("No registered members available.")
 
     else:
 
-        borrower = st.selectbox(
-            "Select Member",
-            members
+        selected_member = st.selectbox(
+
+            "Select Borrower",
+
+            options=list(member_names.keys()),
+
+            format_func=lambda x: member_names[x]
         )
 
-        amount = st.number_input(
+        loan_amount = st.number_input(
+
             "Loan Amount",
-            value=5000.0
+
+            value=5000.0,
+
+            min_value=100.0
         )
 
-        rate = st.slider(
+        interest_rate = st.slider(
+
             "Interest Rate",
-            0.0,
-            0.5,
-            0.1
+
+            0.00,
+            0.50,
+            0.10
         )
 
         if st.button("Issue Loan"):
 
             success = EqubService.issue_loan(
-                borrower,
-                amount,
-                rate
+
+                selected_member,
+
+                loan_amount,
+
+                interest_rate
             )
 
             if success:
-                st.success("Loan issued successfully")
+
+                st.success("Loan issued successfully.")
+
             else:
-                st.error("Insufficient Equb fund")
+
+                st.error("Insufficient fund available.")
 
     st.markdown("---")
 
     st.subheader("📋 Loan Records")
 
-    if db_get("loans"):
+    if len(db()["loans"]) > 0:
+
+        loans_df = pd.DataFrame(
+            db()["loans"]
+        )
 
         st.dataframe(
-            pd.DataFrame(
-                db_get("loans")
-            )
+            loans_df,
+            use_container_width=True
         )
 
 # =========================================================
-# ANALYTICS
+# ANALYTICS MODULE
 # =========================================================
-elif menu == "Analytics":
+elif menu == "Financial Analytics":
 
-    st.subheader("📐 Financial Analytics")
+    st.header("📐 Financial Analytics & Statistics")
 
-    members = db_get("members")
+    total_members = len(db()["members"])
 
-    total_members = len(members)
+    total_contributions = \
+        db()["analytics"]["total_contributions"]
 
-    total_paid = sum([
-        members[m]["total_paid"]
-        for m in members
-    ]) if members else 0
+    total_loans = \
+        db()["analytics"]["total_loans"]
 
-    total_loans = sum([
-        loan["amount"]
-        for loan in db_get("loans")
-    ]) if db_get("loans") else 0
+    sustainability = \
+        EqubMathematics.sustainability_ratio(
 
-    st.metric(
-        "Total Members",
-        total_members
-    )
+            db()["financials"]["equb_fund"],
 
-    st.metric(
+            total_loans
+        )
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric(
         "Total Contributions",
-        f"{total_paid:.2f} ETB"
+        f"{total_contributions:,.2f} ETB"
     )
 
-    st.metric(
-        "Current Equb Fund",
-        f"{db_get('equb_fund'):.2f} ETB"
-    )
-
-    st.metric(
+    col2.metric(
         "Total Loans",
-        f"{total_loans:.2f} ETB"
+        f"{total_loans:,.2f} ETB"
+    )
+
+    col3.metric(
+        "Sustainability Ratio",
+        f"{sustainability:.2f}"
     )
 
     st.markdown("---")
 
-    st.subheader("📋 Transactions")
+    st.subheader("📊 Statistical Summary")
 
-    if db_get("transactions"):
+    stats_df = pd.DataFrame({
 
-        st.dataframe(
-            pd.DataFrame(
-                db_get("transactions")
-            )
-        )
+        "Indicator": [
+
+            "Registered Members",
+            "Current Equb Fund",
+            "Total Winners",
+            "Monthly Contribution"
+        ],
+
+        "Value": [
+
+            total_members,
+
+            db()["financials"]["equb_fund"],
+
+            len(db()["winners"]),
+
+            db()["financials"]["monthly_contribution"]
+        ]
+    })
+
+    st.table(stats_df)
 
 # =========================================================
-# MATHEMATICAL MODEL
+# MATHEMATICAL MODELS
 # =========================================================
-elif menu == "Mathematical Model":
+elif menu == "Mathematical Models":
 
-    st.subheader("📘 Mathematical & Statistical Model")
+    st.header("📘 Mathematical & Statistical Models")
 
     st.markdown("""
-### Core Equb Financial Model
+## Core Equb Fund Dynamics
 """)
 
     :contentReference[oaicite:0]{index=0}
@@ -559,15 +717,17 @@ elif menu == "Mathematical Model":
 Where:
 
 - \(F_t\): Current Equb fund
-- \(C_t\): Member contributions
-- \(I_t\): Investment income
-- \(P_t\): Winner payout
-- \(L_t\): Loans issued
+- \(C_t\): Total contributions
 - \(R_t\): Loan repayments
+- \(I_t\): Investment income
+- \(P_t\): Winner payouts
+- \(L_t\): Loans issued
+""")
 
----
+    st.markdown("---")
 
-### Winner Selection Probability
+    st.markdown("""
+## Winner Selection Probability
 """)
 
     :contentReference[oaicite:1]{index=1}
@@ -577,10 +737,12 @@ Where:
 
 - \(P(W_i)\): Probability member \(i\) wins
 - \(N\): Number of eligible members
+""")
 
----
+    st.markdown("---")
 
-### Loan Growth Model
+    st.markdown("""
+## Loan Growth Model
 """)
 
     :contentReference[oaicite:2]{index=2}
@@ -588,26 +750,82 @@ Where:
     st.markdown("""
 Where:
 
-- \(A_t\): Total repayment
-- \(P\): Principal loan amount
+- \(A\): Total repayment amount
+- \(P\): Principal loan
 - \(r\): Interest rate
+""")
 
----
+    st.markdown("---")
 
-### Sustainability Condition
+    st.markdown("""
+## Sustainability Condition
 """)
 
     :contentReference[oaicite:3]{index=3}
 
     st.markdown("""
-These models support:
+A sustainable Equb system generally satisfies:
 
-- Sustainability analysis
-- Risk analysis
-- Financial forecasting
-- Policy optimization
-- Community financial planning
+- \(S > 1\): Stable system
+- \(S = 1\): Critical equilibrium
+- \(S < 1\): Financial instability risk
 """)
+
+# =========================================================
+# SYSTEM REPORT
+# =========================================================
+elif menu == "System Report":
+
+    st.header("📄 Enterprise System Report")
+
+    report_data = {
+
+        "Indicator": [
+
+            "Project Name",
+            "Organization",
+            "Version",
+            "Registered Members",
+            "Current Fund",
+            "Total Loans",
+            "Total Winners"
+        ],
+
+        "Value": [
+
+            db()["system_info"]["project"],
+
+            db()["system_info"]["organization"],
+
+            db()["system_info"]["version"],
+
+            len(db()["members"]),
+
+            db()["financials"]["equb_fund"],
+
+            db()["analytics"]["total_loans"],
+
+            len(db()["winners"])
+        ]
+    }
+
+    report_df = pd.DataFrame(report_data)
+
+    st.dataframe(
+        report_df,
+        use_container_width=True
+    )
+
+    st.download_button(
+
+        label="⬇ Download Report CSV",
+
+        data=report_df.to_csv(index=False),
+
+        file_name="equb_system_report.csv",
+
+        mime="text/csv"
+    )
 
 # =========================================================
 # FOOTER
@@ -617,8 +835,12 @@ st.markdown("---")
 st.markdown("""
 ### 🇪🇹 Equb App Systems
 
-Technology Transfer Project
-Department of Statistics, Aksum University
+**Technology Transfer Demonstration Platform**
 
-Developed for Ethiopian Community Finance Digital Transformation
+Department of Statistics  
+Aksum University
+
+Developed for Ethiopian Community Financial Digital Transformation,
+Smart Cooperative Finance Systems,
+and Scalable Indigenous Fintech Innovation.
 """)
